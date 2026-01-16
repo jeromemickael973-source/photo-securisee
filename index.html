@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Prise de photo sécurisée</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body>
+  <h2>Prendre une photo sécurisée</h2>
+
+  <p>
+    Appuie sur le bouton ci-dessous. Sur ton téléphone, la caméra va s’ouvrir automatiquement.<br>
+    Ensuite la photo sera envoyée automatiquement à Make.
+  </p>
+
+  <div id="missionInfo"></div>
+
+  <input
+    type="file"
+    id="photoInput"
+    accept="image/*"
+    capture="environment"
+    style="display:none"
+  />
+
+  <button onclick="document.getElementById('photoInput').click()">
+    📸 Prendre une photo
+  </button>
+
+  <div id="preview" style="margin-top:20px"></div>
+
+  <script>
+    const WEBHOOK_URL = "https://hook.integromat.com/TON_WEBHOOK"; 
+    const API_KEY = "TA_CLE_API_SECRETE"; 
+
+    const params = new URLSearchParams(window.location.search);
+    const missionId = params.get("mission_id") || "non_defini";
+    const userId = params.get("user_id") || "non_defini";
+
+    document.getElementById("missionInfo").innerHTML =
+      "<strong>Mission :</strong> " + missionId + "<br>" +
+      "<strong>Utilisateur :</strong> " + userId;
+
+    document.getElementById("photoInput").addEventListener("change", async function (evt) {
+      const file = evt.target.files[0];
+      if (!file) return;
+
+      const preview = document.getElementById("preview");
+      preview.innerHTML = "<p>Envoi de la photo...</p>";
+
+      const formData = new FormData();
+      formData.append("mission_id", missionId);
+      formData.append("user_id", userId);
+      formData.append("photo", file);
+
+      try {
+        const response = await fetch(WEBHOOK_URL, {
+          method: "POST",
+          headers: { "x-api-key": API_KEY },
+          body: formData
+        });
+
+        if (response.ok) {
+          preview.innerHTML = "<p style='color:green'>Photo envoyée ✔️</p>";
+        } else {
+          preview.innerHTML = "<p style='color:red'>Erreur lors de l'envoi ❌</p>";
+        }
+      } catch (err) {
+        preview.innerHTML = "<p style='color:red'>Erreur réseau ❌</p>";
+      }
+    });
+  </script>
+</body>
+</html>
